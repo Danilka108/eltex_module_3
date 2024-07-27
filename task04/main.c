@@ -22,14 +22,6 @@ int main() {
   srand(time(NULL));
 
   if (pid) {
-    close(fd[0]);
-
-    int r;
-    while ((r = rand(), write(fd[1], &r, sizeof(r)) > 0))
-      sleep(1);
-
-    close(fd[1]);
-  } else {
     close(fd[1]);
 
     int r;
@@ -38,6 +30,14 @@ int main() {
     }
 
     close(fd[0]);
+  } else {
+    close(fd[0]);
+
+    int r;
+    while ((r = rand(), write(fd[1], &r, sizeof(r)) > 0))
+      sleep(1);
+
+    close(fd[1]);
   }
 
   return 0;
