@@ -1,0 +1,21 @@
+CC=gcc
+CFLAGS=-Wall -Werror -Wextra
+SRCS=main.c
+OBJS=$(SRCS:.c=.o)
+EXECUTABLE=task08
+
+.PHONY: all, run, clean
+
+all: clean $(EXECUTABLE)
+
+run: clean $(EXECUTABLE)
+	./$(EXECUTABLE)
+
+$(EXECUTABLE): $(OBJS)
+	$(CC) $^ -lm -o $(EXECUTABLE)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $<
+
+clean:
+	rm -f *.o *.bin $(EXECUTABLE)
