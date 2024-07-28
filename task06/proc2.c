@@ -1,21 +1,36 @@
+#include "msgqueue.h"
+#include <stdio.h>
 #include <string.h>
-
-#include "common.h"
-#include "interproc.h"
+#include <unistd.h>
 
 int main() {
-  int msgq = init_msgq();
+  msgqueue_t msgqueue = msgqueue_init("proc1.c", 'A', 0666);
+  msg_t msg;
+  int is_exit_msg;
 
   while (1) {
-    struct msgbuf recv_msg = receive_msg(msgq, PROC_1_TYPE);
-    if (strcmp(recv_msg.mtext, EXIT_MSG) == 0) {
-      break;
-    }
+    printf("send message: ");
+    msg_scan(&msg);
+    is_exit_msg = strcmp(msg_get_str(&msg), "exit") == 0;
+    msgqueue_send(&msgqueue, &msg, is_exit_msg);
+    printf("message sent\n");
 
-    send_msg(msgq, PROC_2_TYPE);
+    if (is_exit_msg)
+      break;
+
+    usleep(100000);
+
+    printf("receive message...\n");
+    msgqueue_recv(&msgqueue, &msg, &is_exit_msg);
+    printf("received message: %s\n", msg_get_str(&msg));
+
+    if (is_exit_msg)
+      break;
   }
 
-  close_msgq(msgq);
+  printf("exit\n");
+  msgqueue_free(&msgqueue);
+  msgqueue_delete(&msgqueue);
 
   return 0;
 }

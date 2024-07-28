@@ -6,14 +6,11 @@ EXECUTABLES=proc1 proc2
 
 all: clean $(EXECUTABLES)
 
-# run: clean $(EXECUTABLE)
-# 	./$(EXECUTABLE)
+$(EXECUTABLES): %: %.o libmsgqueue.a
+	$(CC) $< -L. -lmsgqueue -o $@
 
-$(EXECUTABLES): %: %.o common.a
-	$(CC) $< -L. -lcommon -o $@
-
-common.a: common.o
-	ar -q lib$@ $^
+lib%.a: %.o
+	ar -q $@ $^
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
