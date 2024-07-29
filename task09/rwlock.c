@@ -49,21 +49,23 @@ void do_ops(rwlock_t *lock, struct sembuf *bufs, int n) {
 }
 
 void rwlock_read_lock(rwlock_t *self) {
-  struct sembuf ops[4] = {
+  struct sembuf ops[5] = {
+      {BARRIER_SEM, -1, 0},
       {TURNSTILE_SEM, -1, 0},
       {TURNSTILE_SEM, 1, 0},
       {WRITE_SEM, 0, 0},
       {READ_SEM, +1, 0},
   };
 
-  do_ops(self, ops, 4);
+  do_ops(self, ops, 5);
 }
 
 void rwlock_read_unlock(rwlock_t *self) {
-  struct sembuf ops[1] = {
+  struct sembuf ops[2] = {
+      {BARRIER_SEM, 1, 0},
       {READ_SEM, -1, 0},
   };
-  do_ops(self, ops, 1);
+  do_ops(self, ops, 2);
 }
 
 void rwlock_write_lock(rwlock_t *self) {
