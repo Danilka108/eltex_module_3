@@ -12,7 +12,11 @@ void parent(sem_t *sem, int pipefd[2]);
 
 void child(sem_t *sem, int pipefd[2]);
 
+int open_file(int oflags);
+
 int main() {
+  close(open_file(O_CREAT | O_TRUNC));
+
   sem_t *sem;
   if ((sem = sem_open("/task10", O_CREAT, 0666, 1)) == SEM_FAILED) {
     perror("sem_open");
@@ -36,8 +40,8 @@ int main() {
   return 0;
 }
 
-int open_file() {
-  int fd = open("numbers.bin", O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
+int open_file(int oflags) {
+  int fd = open("numbers.bin", oflags, S_IRUSR | S_IWUSR);
   if (fd == -1) {
     perror("open");
     exit(EXIT_FAILURE);
@@ -49,26 +53,21 @@ int open_file() {
 void parent(sem_t *sem, int pipefd[2]) {
   close(pipefd[1]);
 
-  int fd = open_file();
-
   while (1) {
     if (sem_wait(sem) == -1) {
       perror("sem_wait");
       exit(EXIT_FAILURE);
     }
 
+    int fd = open_file(O_WRONLY | O_APPEND);
     srand(time(NULL));
     int num = rand();
-
-    if (lseek(fd, 0, SEEK_SET) == -1) {
-      perror("lseek");
-      exit(EXIT_FAILURE);
-    }
 
     if (write(fd, &num, sizeof(num)) == -1) {
       perror("write");
       exit(EXIT_FAILURE);
     }
+    close(fd);
 
     printf("write number %d\n", num);
 
@@ -94,8 +93,6 @@ void parent(sem_t *sem, int pipefd[2]) {
 void child(sem_t *sem, int pipefd[2]) {
   close(pipefd[0]);
 
-  int fd = open_file();
-
   while (1) {
     srand(time(NULL));
     int num = rand();
@@ -113,16 +110,13 @@ void child(sem_t *sem, int pipefd[2]) {
       exit(EXIT_FAILURE);
     }
 
-    if (lseek(fd, 0, SEEK_SET) == -1) {
-      perror("lseek");
-      exit(EXIT_FAILURE);
-    }
-
+    int fd = open_file(O_RDONLY);
     num = 0;
     if (read(fd, &num, sizeof(num)) == -1) {
       perror("read");
       exit(EXIT_FAILURE);
     }
+    close(fd);
 
     printf("read number %d\n", num);
 
