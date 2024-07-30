@@ -59,7 +59,7 @@ void parent(sem_t *sem, int pipefd[2]) {
       exit(EXIT_FAILURE);
     }
 
-    int fd = open_file(O_WRONLY | O_APPEND);
+    int fd = open_file(O_WRONLY);
     srand(time(NULL));
     int num = rand();
 
