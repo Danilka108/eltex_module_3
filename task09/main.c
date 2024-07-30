@@ -15,8 +15,10 @@ void read_from_pipe(int pipefd[2]);
 void reader(int i, rwlock_t *rwlock, int pipefd[2]);
 void read_from_file(int i, int fd);
 void write_to_pipe(int pipefd[2]);
+int open_file(int oflags);
 
 int main() {
+  close(open_file(O_WRONLY | O_CREAT | O_TRUNC));
   size_t wcount = 3;
   size_t rcount = 12;
 
@@ -63,8 +65,8 @@ int main() {
   return 0;
 }
 
-int open_file() {
-  int fd = open("numbers.bin", O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
+int open_file(int oflags) {
+  int fd = open("numbers.bin", oflags, S_IRUSR | S_IWUSR);
   if (fd == -1) {
     perror("open");
     exit(EXIT_FAILURE);
@@ -74,18 +76,19 @@ int open_file() {
 }
 
 void writer(int i, rwlock_t *rwlock, int pipefd[2]) {
-  int fd = open_file();
-
   if (i == 0) {
     close(pipefd[1]);
   }
 
   while (1) {
-    rwlock_write_lock(rwlock);
-    write_to_file(i, fd);
-    rwlock_write_unlock(rwlock);
+    sleep(3);
+    usleep(1000 * ((rand() ^ i) % 999));
 
-    sleep(4);
+    rwlock_write_lock(rwlock);
+    int fd = open_file(O_WRONLY);
+    write_to_file(i, fd);
+    close(fd);
+    rwlock_write_unlock(rwlock);
 
     if (i == 0)
       read_from_pipe(pipefd);
@@ -97,11 +100,6 @@ void writer(int i, rwlock_t *rwlock, int pipefd[2]) {
 }
 
 void write_to_file(int i, int fd) {
-  if (lseek(fd, 0, SEEK_SET) == -1) {
-    perror("lseek");
-    exit(EXIT_FAILURE);
-  }
-
   srand(time(NULL) ^ i);
   int num = rand();
 
@@ -124,18 +122,19 @@ void read_from_pipe(int pipefd[2]) {
 }
 
 void reader(int i, rwlock_t *rwlock, int pipefd[2]) {
-  int fd = open_file();
-
   if (i == 0) {
     close(pipefd[0]);
   }
 
   while (1) {
-    rwlock_read_lock(rwlock);
-    read_from_file(i, fd);
-    rwlock_read_unlock(rwlock);
-
     sleep(2);
+    usleep(1000 * ((rand() ^ i) % 999));
+
+    rwlock_read_lock(rwlock);
+    int fd = open_file(O_RDONLY);
+    read_from_file(i, fd);
+    close(fd);
+    rwlock_read_unlock(rwlock);
 
     if (i == 0)
       write_to_pipe(pipefd);
@@ -149,18 +148,17 @@ void reader(int i, rwlock_t *rwlock, int pipefd[2]) {
 void read_from_file(int i, int fd) {
   int num = 0;
 
-  if (lseek(fd, 0, SEEK_SET) == -1) {
-    perror("lseek");
-    exit(EXIT_FAILURE);
-  }
-
-  if (read(fd, &num, sizeof(int)) == -1) {
+  ssize_t bytes;
+  if ((bytes = read(fd, &num, sizeof(int))) == -1) {
     perror("read");
     exit(EXIT_FAILURE);
   }
-  usleep(1000 * (rand() % 999));
 
-  printf("file reader %d: %d\n", i, num);
+  if (bytes == 0) {
+    printf("file reader %d: NULL\n", i);
+  } else {
+    printf("file reader %d: %d\n", i, num);
+  }
 }
 
 void write_to_pipe(int pipefd[2]) {
