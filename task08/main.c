@@ -20,19 +20,18 @@ void mutex_lock(task_08_mutex_t *self);
 void mutex_unlock(task_08_mutex_t *self);
 void mutex_destroy(task_08_mutex_t *self);
 
-void parent(task_08_mutex_t *mutex, int pipefd[2], int fd);
-void child(task_08_mutex_t *mutex, int pipefd[2], int fd);
+void parent(task_08_mutex_t *mutex, int pipefd[2]);
+void child(task_08_mutex_t *mutex, int pipefd[2]);
 
 int main() {
   task_08_mutex_t mutex = mutex_init();
+  close(open_file(O_CREAT | O_TRUNC));
 
   int pipefd[2];
   if (pipe(pipefd) == -1) {
     perror("pipe");
     exit(EXIT_FAILURE);
   }
-
-  int fd = open_file(O_RDWR);
 
   pid_t pid;
   if ((pid = fork()) == -1) {
@@ -41,12 +40,11 @@ int main() {
   }
 
   if (pid) {
-    parent(&mutex, pipefd, fd);
+    parent(&mutex, pipefd);
   } else {
-    child(&mutex, pipefd, fd);
+    child(&mutex, pipefd);
   }
 
-  close(fd);
   mutex_destroy(&mutex);
 
   return EXIT_SUCCESS;
@@ -55,7 +53,7 @@ int main() {
 int open_file(int oflag) {
   int fd;
 
-  if ((fd = open(FILE_PATH, oflag | O_CREAT | O_TRUNC, S_IWUSR | S_IRUSR)) ==
+  if ((fd = open(FILE_PATH, oflag, S_IWUSR | S_IRUSR)) ==
       -1) {
     perror("file open");
     exit(EXIT_FAILURE);
@@ -64,16 +62,15 @@ int open_file(int oflag) {
   return fd;
 }
 
-void parent(task_08_mutex_t *mutex, int pipefd[2], int fd) {
+void parent(task_08_mutex_t *mutex, int pipefd[2]) {
   close(pipefd[1]);
 
-  int r;
-
-  srand(time(NULL));
   while (1) {
     mutex_lock(mutex);
     {
-      r = rand();
+      int fd = open_file(O_WRONLY);
+      srand(time(NULL) ^ 2);
+      int r = rand();
 
       if (write(fd, &r, sizeof(r)) == -1) {
         perror("file write");
@@ -81,10 +78,12 @@ void parent(task_08_mutex_t *mutex, int pipefd[2], int fd) {
       }
 
       printf("write to file: %d\n", r);
+      close(fd);
     }
     mutex_unlock(mutex);
 
     {
+      int r = 0;
       if (read(pipefd[0], &r, sizeof(r)) < 0) {
         perror("pipe read");
         exit(EXIT_FAILURE);
@@ -97,16 +96,13 @@ void parent(task_08_mutex_t *mutex, int pipefd[2], int fd) {
   close(pipefd[0]);
 }
 
-void child(task_08_mutex_t *mutex, int pipefd[2], int fd) {
+void child(task_08_mutex_t *mutex, int pipefd[2]) {
   close(pipefd[0]);
 
-  size_t i = 0;
-  int r;
-
-  srand(time(NULL));
   while (1) {
     {
-      r = rand();
+      srand(time(NULL) ^ 4);
+      int r = rand();
 
       if (write(pipefd[1], &r, sizeof(r)) < 0) {
         perror("pipe write");
@@ -118,7 +114,8 @@ void child(task_08_mutex_t *mutex, int pipefd[2], int fd) {
 
     mutex_lock(mutex);
     {
-      lseek(fd, (i++) * sizeof(r), SEEK_SET);
+      int fd = open_file(O_RDONLY);
+      int r = 0;
 
       if ((read(fd, &r, sizeof(r))) == -1) {
         perror("file read");
@@ -126,6 +123,7 @@ void child(task_08_mutex_t *mutex, int pipefd[2], int fd) {
       }
 
       printf("read from file: %d\n", r);
+      close(fd);
       sleep(1);
     }
     mutex_unlock(mutex);
