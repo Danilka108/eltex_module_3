@@ -30,7 +30,7 @@ msgqueue_t msgqueue_init(const char *name, int capacity, mode_t mode) {
 void msgqueue_recv(msgqueue_t *self, msg_t *msg, int *exit_msg) {
   unsigned int prior;
 
-  if (mq_receive(self->_desc, (char *)msg, sizeof(msg_t), &prior) < 0) {
+  if (mq_receive(self->_desc, (char *)msg->text, sizeof(msg->text), &prior) < 0) {
     perror("mq_receive");
     exit(EXIT_FAILURE);
   }
@@ -41,7 +41,7 @@ void msgqueue_recv(msgqueue_t *self, msg_t *msg, int *exit_msg) {
 void msgqueue_send(msgqueue_t *self, msg_t *msg, int exit_msg) {
   unsigned int prior = exit_msg ? MSG_EXIT_PRIOR : MSG_DEFAULT_PRIOR;
 
-  if (mq_send(self->_desc, (char *)msg, sizeof(msg_t), prior) < 0) {
+  if (mq_send(self->_desc, (char *)msg->text, sizeof(msg->text), prior) < 0) {
     perror("mq_send");
     exit(EXIT_FAILURE);
   }
