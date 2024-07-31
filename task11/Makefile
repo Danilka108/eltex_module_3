@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -Werror -Wextra
 # CFLAGS=
-SRCS=main.c
+SRCS=main.c rwlock.c shared_mem.c
 OBJS=$(SRCS:.c=.o)
 EXECUTABLE=task11
 
