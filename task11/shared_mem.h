@@ -16,6 +16,8 @@ void shared_mem_init(shared_mem_t *self, const char *name, size_t size);
 
 void *shared_mem_get(shared_mem_t *self);
 
-void shared_mem_destroy(shared_mem_t *self);
+void shared_mem_unlink(shared_mem_t *self);
+
+void shared_mem_close(shared_mem_t *self);
 
 #endif

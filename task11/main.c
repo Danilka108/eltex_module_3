@@ -30,6 +30,7 @@ int main() {
   size_t wrcount = 3, rdcount = 12;
   shared_mem_t shared_mem;
   shared_mem_init(&shared_mem, "/task11", sizeof(struct shmbuf));
+  shared_mem_unlink(&shared_mem);
 
   struct shmbuf *buf = shared_mem_get(&shared_mem);
   rwlock_init(&buf->rwlock, 1);
@@ -67,7 +68,7 @@ int main() {
 
   rwlock_write_unlock(&buf->rwlock);
 
-  shared_mem_destroy(&shared_mem);
+  shared_mem_close(&shared_mem);
 }
 
 void writer(int pipefd[2], int i, shared_mem_t *shared_mem) {
@@ -104,7 +105,7 @@ void writer(int pipefd[2], int i, shared_mem_t *shared_mem) {
   if (i == 0)
     close(pipefd[0]);
 
-  shared_mem_destroy(shared_mem);
+  shared_mem_close(shared_mem);
 }
 
 void reader(int pipefd[2], int i, shared_mem_t *shared_mem) {
@@ -149,7 +150,7 @@ void reader(int pipefd[2], int i, shared_mem_t *shared_mem) {
   if (i == 0)
     close(pipefd[1]);
 
-  shared_mem_destroy(shared_mem);
+  shared_mem_close(shared_mem);
 }
 
 int open_file(int oflag) {
