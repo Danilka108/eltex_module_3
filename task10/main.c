@@ -54,6 +54,7 @@ void parent(sem_t *sem, int pipefd[2]) {
   close(pipefd[1]);
 
   while (1) {
+    usleep(500000);
     if (sem_wait(sem) == -1) {
       perror("sem_wait");
       exit(EXIT_FAILURE);
