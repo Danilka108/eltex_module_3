@@ -40,6 +40,8 @@ void handle_client(int fd) {
   char filename[NAME_MAX];
 
   while (1) {
+    memset(&req, 0, sizeof(req));
+    memset(&res, 0, sizeof(req));
     req.type = GET_OP;
     do_request(fd, &req, &res);
     op = res.op;
@@ -55,7 +57,8 @@ void handle_client(int fd) {
     } else {
       req.type = GET_FILENAME;
       do_request(fd, &req, &res);
-      strcpy(filename, res.filename);
+      memcpy(filename, res.filename, NAME_MAX);
+      printf("filename: %s\n", filename);
     }
 
     req.type = OP_RESULT;
@@ -106,8 +109,8 @@ void handle_client(int fd) {
         }
       }
 
-      char end = '\0';
-      if (write(fd, &end, sizeof(char)) == -1)
+      char end[2] = "\r\n";
+      if (write(fd, &end, sizeof(end)) == -1)
         handle_error("write");
 
       if (read(fd, &res, sizeof(res)) == -1) {
@@ -116,6 +119,7 @@ void handle_client(int fd) {
         handle_error("read");
       }
 
+      close(ffd);
       if (res.stop)
         break;
 

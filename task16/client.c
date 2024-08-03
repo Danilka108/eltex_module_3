@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -72,24 +73,37 @@ int main(int argc, char *argv[]) {
       break;
     }
     case START_FILE_SENDING: {
-      char buff[4 * 1024];
-      char *buffp = buff;
+      char buf[4 * 1024];
       ssize_t bytes;
+      char out_filename[NAME_MAX];
+
+      printf("out filename: ");
+      scanf("%s", out_filename);
+
+      int ffd = open(out_filename, O_WRONLY | O_TRUNC | O_CREAT, 0666);
+      if (ffd == -1)
+        handle_error("open");
 
       while (1) {
-        if ((bytes = read(fd, buffp, sizeof(buff))) == -1) {
+        if ((bytes = read(fd, buf, sizeof(buf))) == -1) {
           close(fd);
           handle_error("read");
         }
-        if (bytes > 0 && buffp[bytes - 1] == '\0')
+        int is_end =
+            bytes > 1 && buf[bytes - 2] == '\r' && buf[bytes - 1] == '\n';
+
+        if (write(ffd, buf, is_end ? bytes - 2 : bytes) == -1) {
+          handle_error("write");
+        }
+
+        if (is_end)
           break;
-        fwrite(buffp, sizeof(char), bytes, stdout);
-        buffp += bytes;
       };
 
       printf("quit (1 - yes, 0 - no): ");
       scanf("%d", &res.stop);
       stop = res.stop;
+      close(ffd);
       break;
     }
     }

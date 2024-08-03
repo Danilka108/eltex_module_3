@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=
-# CFLAGS=-Wall -Werror -Wextra
+# CFLAGS=
+CFLAGS=-Wall -Werror -Wextra
 SRCS=addr.c
 OBJS=$(SRCS:.c=.o)
 EXECUTABLES=client server
