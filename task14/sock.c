@@ -49,6 +49,7 @@ int sock_send(sock_t *self) {
   printf("%s:%d> ", inet_ntoa(self->laddr.sin_addr),
          ntohs(self->laddr.sin_port));
 
+  memset(buf, 0, sizeof(buf));
   if (fgets(buf, MSG_SIZE, stdin) == NULL)
   {
     sock_close(self);

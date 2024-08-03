@@ -4,7 +4,7 @@
 #ifndef TASK_14_SOCK_H
 #define TASK_14_SOCK_H
 
-#define MSG_SIZE 1024
+#define MSG_SIZE 4096
 
 typedef char msg_t[MSG_SIZE];
 
