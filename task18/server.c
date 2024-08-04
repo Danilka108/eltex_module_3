@@ -71,10 +71,8 @@ int main(int argc, char *argv[]) {
         if (set_nonblocking(conn_fd) == -1)
           errExit("set_nonblocking");
 
-        printf("connected %s:%d\n", inet_ntoa(conn_addr.sin_addr),
-               ntohs(conn_addr.sin_port));
 
-        init_conn(&events[i], epoll_fd, conn_fd);
+        init_conn(&events[i], epoll_fd, conn_fd, conn_addr);
       } else {
         handle_conn(&events[i]);
       }

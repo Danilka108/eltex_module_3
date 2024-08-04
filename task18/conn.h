@@ -1,4 +1,5 @@
 #include "shared.h"
+#include <netinet/in.h>
 #include <sys/epoll.h>
 
 #ifndef TASK_18_CONN_H
@@ -24,9 +25,11 @@ struct conn_inner {
   int cont;
   msg_kind_t err_msg;
   enum CONN_STATE state;
+  struct sockaddr_in addr;
 };
 
-void init_conn(struct epoll_event *ev, int epoll_fd, int conn_fd);
+void init_conn(struct epoll_event *ev, int epoll_fd, int conn_fd,
+               struct sockaddr_in conn_addr);
 
 void handle_conn(struct epoll_event *ev);
 

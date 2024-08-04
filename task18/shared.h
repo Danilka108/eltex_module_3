@@ -17,10 +17,10 @@ typedef struct {
 } msg_t;
 
 typedef enum {
-  OP_SUM,
-  OP_SUB,
-  OP_DIV,
-  OP_MUL,
+  OP_SUM = 1,
+  OP_SUB = 2,
+  OP_DIV = 3,
+  OP_MUL = 4,
 } op_t;
 
 typedef union {

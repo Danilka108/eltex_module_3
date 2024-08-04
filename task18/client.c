@@ -33,6 +33,7 @@ int main(int argc, char *argv[]) {
   while (cont) {
     msg_t msg;
     reply_t reply;
+    memset(&reply, 0, sizeof reply);
 
     if (read(fd, &msg, sizeof(msg)) == -1) {
       close(fd);
@@ -48,10 +49,10 @@ int main(int argc, char *argv[]) {
     }
     case MSG_REQ_OP: {
       int op = 0;
-      printf("op (1 - sum, 2 - sub, 3 - div, 4 - mul, 5 - file): ");
+      printf("op (1 - sum, 2 - sub, 3 - div, 4 - mul): ");
       scanf("%d", &op);
 
-      if (op < 1 || op > 5) {
+      if (op < 1 || op > 4) {
         close(fd);
         fprintf(stderr, "invalid operator\n");
         exit(EXIT_FAILURE);
